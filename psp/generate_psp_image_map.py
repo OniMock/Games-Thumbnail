@@ -5,10 +5,10 @@ from pathlib import Path
 
 # Paths (adjust if script moved)
 BASE_DIR = Path(__file__).resolve().parent
-DATA_JSON = BASE_DIR / "PSX.data.json"
+DATA_JSON = BASE_DIR / "PSP.data.json"
 NAMED_TITLES_DIR = BASE_DIR / "Named_Titles"
 OUTPUT_JSON = BASE_DIR / "game_id_to_image.json"
-ERROR_LOG = BASE_DIR / "psx_mapping_errors.log"
+ERROR_LOG = BASE_DIR / "psp_mapping_errors.log"
 
 def normalize_str(s: str) -> str:
     """Return a lowercase alphanumeric‑only version of *s*."""
@@ -58,21 +58,27 @@ def main():
     result = {}
     unmapped = []
 
+    print(f"Processing {len(data)} entries from {DATA_JSON.name}...")
+
     for key, info in data.items():
-        # Only process entries with a serial
         if not isinstance(info, dict) or 'serial' not in info:
             continue
-
+            
         serial = info['serial']
         serial_clean = serial.replace('-', '')
-
+        
         # Priority 1: Direct serial match
         serial_norm = normalize_str(serial_clean)
-
+        
         # Priority 2: Title and Key matches
         title = info.get('title', '')
+        if isinstance(title, list):
+            title = title[0] if title else ''
+            
         release_name = info.get('release_name', '')
-
+        if isinstance(release_name, list):
+            release_name = release_name[0] if release_name else ''
+        
         # Logic: Try specific match first. If it's too small (< 5KB), fallback to Master match.
         found_filename = None
         
@@ -109,7 +115,7 @@ def main():
                     break # Take the best master available
 
         if found_filename:
-            result[serial_clean] = f"psx/Named_Titles/{found_filename}"
+            result[serial_clean] = f"psp/Named_Titles/{found_filename}"
         else:
             result[serial_clean] = None
             unmapped.append(serial_clean)
