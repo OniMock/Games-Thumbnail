@@ -5,8 +5,10 @@ scripts = [
     "auto_rename_assets.py",
     "psx/generate_psx_image_map.py",
     "psp/generate_psp_image_map.py",
+    "homebrew/generate_homebrew_image_map.py",
     "generate_full_map.py"
 ]
+
 
 def run():
     print("=== STARTING FULL UPDATE PROCESS ===\n")

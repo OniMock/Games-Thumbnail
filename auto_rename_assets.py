@@ -13,8 +13,13 @@ PLATFORMS = {
     "psx": {
         "data": BASE_DIR / "psx" / "PSX.data.json",
         "titles": BASE_DIR / "psx" / "Named_Titles"
+    },
+    "homebrew": {
+        "data": BASE_DIR / "homebrew" / "HOMEBREW.data.json",
+        "titles": BASE_DIR / "homebrew" / "Named_Titles"
     }
 }
+
 
 def sanitize_filename(filename: str) -> str:
     """Remove characters that are illegal in Windows filenames."""

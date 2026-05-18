@@ -1,0 +1,62 @@
+{
+  "HBXA1B9195B": {
+    "serial": "HBXA1B9195B",
+    "title": "pspalatro",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBX392ABD96": {
+    "serial": "HBX392ABD96",
+    "title": "Super Mario 64",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBX1B6576C3": {
+    "serial": "HBX1B6576C3",
+    "title": "Forms3D",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBXA1359E7C": {
+    "serial": "HBXA1359E7C",
+    "title": "ARK_01234",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBXA10FE5FA": {
+    "serial": "HBXA10FE5FA",
+    "title": "Snes - s9xTYLme",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBXF2995C27": {
+    "serial": "HBXF2995C27",
+    "title": "Sonic Mania",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBX282C27B3": {
+    "serial": "HBX282C27B3",
+    "title": "s9xTYLme_mod",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBX93F904E6": {
+    "serial": "HBX93F904E6",
+    "title": "Game Boy Advanced - gpSP",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBXB7B5C62B": {
+    "serial": "HBXB7B5C62B",
+    "title": "Game Boy Color - Masterboy",
+    "apitype": "0x141",
+    "category": 2
+  },
+  "HBX7C8A3650": {
+    "serial": "HBX7C8A3650",
+    "title": "PKGI",
+    "apitype": "0x141",
+    "category": 2
+  }
+}

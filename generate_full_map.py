@@ -5,11 +5,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 PSX_MAP = BASE_DIR / "psx" / "game_id_to_image.json"
 PSP_MAP = BASE_DIR / "psp" / "game_id_to_image.json"
+HOMEBREW_MAP = BASE_DIR / "homebrew" / "game_id_to_image.json"
 OUTPUT_FILE = BASE_DIR / "full_game_map.json"
 
 def merge_mappings():
     """
-    Combines PSX and PSP image mappings into a single JSON file.
+    Combines PSX, PSP and Homebrew image mappings into a single JSON file.
     Filters out null values to keep the resulting file clean and small.
     """
     full_map = {}
@@ -17,8 +18,10 @@ def merge_mappings():
     # Systems to process
     systems = {
         "PSX": PSX_MAP,
-        "PSP": PSP_MAP
+        "PSP": PSP_MAP,
+        "Homebrew": HOMEBREW_MAP
     }
+
     
     print("Starting mapping merge process...")
     
