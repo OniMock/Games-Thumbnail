@@ -3,18 +3,14 @@
 [![Catalog Consolidation](https://github.com/OniMock/Games-Thumbnail/actions/workflows/consolidate-catalog.yml/badge.svg)](https://github.com/OniMock/Games-Thumbnail/actions/workflows/consolidate-catalog.yml)
 [![PR Validation](https://github.com/OniMock/Games-Thumbnail/actions/workflows/validate-pr.yml/badge.svg)](https://github.com/OniMock/Games-Thumbnail/actions/workflows/validate-pr.yml)
 [![Total Covers](https://img.shields.io/badge/covers-13%2C200%2B-blue.svg)](#-catalog-statistics)
-[![Platforms](https://img.shields.io/badge/platforms-PSP%20%7C%20PSX%20%7C%20Homebrew-orange.svg)](#-supported-platforms)
+[![Platforms](https://img.shields.io/badge/platforms-PSP%20%7C%20PSX%20%7C%20Homebrew-orange.svg)](#-catalog-statistics)
 [![Powered By GameDiary](https://img.shields.io/badge/powered%20by-GameDiary-emerald.svg)](https://gamediary.onimock.com)
 
 A high-performance, open-source repository organizing and mapping official and community boxart covers for **PlayStation Portable (PSP)**, **PlayStation 1 (PSX)**, and **Homebrew** games.
 
 Covers are mapped to canonical Game IDs / Serials (`ULUS-10041`, `SLUS-00068`, `HBX0C92FFCF`), enabling instant cover resolution in Web Apps, Emulators, Launchers, Frontend Hubs, and Discord Bots via GitHub Raw or jsDelivr CDN with zero backend required.
 
-> **Idioma / Language:** [English](#english-documentation) • [Português](#documentação-em-português)
-
 ---
-
-<a name="english-documentation"></a>
 
 ## 📊 Catalog Statistics
 
@@ -125,7 +121,7 @@ To maintain high visual quality across applications, all submitted covers must f
 3. **Naming Convention:**
    - Must be placed under the respective platform folder: `psp/Named_Titles/`, `psx/Named_Titles/`, or `homebrew/Named_Titles/`.
    - The file name should match the **canonical game title** (e.g. `Grand Theft Auto - Liberty City Stories.png`).
-4. **Resolution & Quality:** Clean edges, sharp artwork, no aggressive watermark, and no corrupt scanlines.
+4. **Resolution & Quality:** Clean edges, sharp artwork, no aggressive watermarks, and no corrupt scanlines.
 
 ---
 
@@ -137,7 +133,7 @@ We welcome community contributions! You can submit covers through either of the 
 1. Open [GameDiary](https://gamediary.onimock.com).
 2. Find or add your game.
 3. Open the cover editor, upload your image (PNG, JPG, or WebP), and adjust the frame.
-4. Click **"Contribute to Community"** (*Contribuir com a Comunidade*).
+4. Click **"Contribute to Community"**.
 5. The application converts the image to a standardized PNG, checks for duplicates, and automatically opens a Pull Request on GitHub for you!
 
 ### Option 2: Via Manual GitHub Pull Request
@@ -209,44 +205,6 @@ python update_all.py
 ```bash
 python validate_pr.py
 ```
-
----
-
-<a name="documentação-em-português"></a>
-
-## 🇧🇷 Documentação em Português
-
-### Visão Geral
-O **Games-Thumbnail** é um repositório aberto de capas e metadados de jogos para **PlayStation Portable (PSP)**, **PlayStation 1 (PSX)** e **Homebrews**. O objetivo principal é fornecer uma fonte pública e veloz de capas de jogos mapeadas diretamente pelos Serials/IDs (`ULUS10041`, `SLUS00068`, etc.), pronta para consumo em sites, emuladores, launchers e bots.
-
-### Como usar no seu projeto
-Não é necessário clonar o repositório. Você pode consumir diretamente via CDN do GitHub ou jsDelivr:
-
-1. **Baixe o mapa global:**
-   ```text
-   https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/full_game_map.json
-   ```
-2. **Consulte a capa pelo Game ID limpo (sem traços ou espaços):**
-   - Entrada: `ULUS-10041` -> Chave no JSON: `ULUS10041`
-   - Retorno relativo: `psp/Named_Titles/Persona 3 Portable.png`
-   - URL final da imagem:
-     ```text
-     https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/Named_Titles/Persona%203%20Portable.png
-     ```
-
-### Padrão das Capas
-- **Formato:** Exclusivamente **PNG** verdadeiro (`.png`).
-- **Proporção:** Orientação vertical com aspecto aproximado de **2:3**.
-- **Nome do arquivo:** Nome canônico oficial do jogo (ex: `Crash Bandicoot.png`).
-
-### Como Contribuir
-- **Pelo GameDiary (Mais fácil):** Acesse [GameDiary](https://gamediary.onimock.com), ajuste a capa no editor de corte e clique em *"Contribuir com a Comunidade"*. O envio cria o Pull Request automaticamente no GitHub!
-- **Manualmente via GitHub:** Faça um fork deste repositório, adicione a imagem PNG na pasta correta (`psp/Named_Titles/`, `psx/Named_Titles/` ou `homebrew/Named_Titles/`) e, no caso de Homebrew, adicione o arquivo de metadados em `homebrew/entries/<GAME_ID>.json`. Abra o Pull Request para a branch `main`.
-
-### Créditos e Agradecimentos
-- **Capas e Thumbnails:** Coletadas e estruturadas a partir dos repositórios da comunidade [Libretro Thumbnails](https://github.com/libretro-thumbnails) ([Sony - PlayStation](https://github.com/libretro-thumbnails/Sony_-_PlayStation) e [Sony - PlayStation Portable](https://github.com/libretro-thumbnails/Sony_-_PlayStation_Portable)), seguindo as convenções de nomenclatura do [No-Intro](https://www.no-intro.org/) e [Redump.org](http://redump.org/).
-- **Bancos de Dados de Metadados:** Estruturados a partir dos projetos [GameDB-PSX](https://github.com/niemasd/GameDB-PSX) e [GameDB-PSP](https://github.com/niemasd/GameDB-PSP) mantidos por [niemasd](https://github.com/niemasd), integrados aos dados do PSX Data Center e UMD Database.
-- **Contribuições Comunitárias:** Mantido e expandido continuamente pela comunidade através do [GameDiary](https://gamediary.onimock.com).
 
 ---
 
