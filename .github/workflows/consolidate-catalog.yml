@@ -56,19 +56,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage strictly generated maps, logs, and any asset renames performed by auto_rename_assets
+          # Stage strictly generated maps and any asset renames performed by auto_rename_assets
           git add full_game_map.json \
                   psp/game_id_to_image.json \
                   psx/game_id_to_image.json \
                   homebrew/HOMEBREW.data.json \
                   homebrew/game_id_to_image.json
-
-          # Stage error logs if modified/created
-          for log_file in psp/psp_mapping_errors.log psx/psx_mapping_errors.log homebrew/homebrew_mapping_errors.log; do
-            if [ -f "$log_file" ]; then
-              git add "$log_file"
-            fi
-          done
 
           # Stage any file renames performed by auto_rename_assets in Named_Titles folders
           git add -u psp/Named_Titles/ psx/Named_Titles/ homebrew/Named_Titles/ 2>/dev/null || true

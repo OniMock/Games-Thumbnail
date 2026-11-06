@@ -1,22 +1,252 @@
-# Games Thumbnail Manager
+# Games-Thumbnail — Open Game Cover Art & Metadata Catalog
 
-Repository for organizing and mapping game covers (PSX and PSP) for use in Web Apps.
+[![Catalog Consolidation](https://github.com/OniMock/Games-Thumbnail/actions/workflows/consolidate-catalog.yml/badge.svg)](https://github.com/OniMock/Games-Thumbnail/actions/workflows/consolidate-catalog.yml)
+[![PR Validation](https://github.com/OniMock/Games-Thumbnail/actions/workflows/validate-pr.yml/badge.svg)](https://github.com/OniMock/Games-Thumbnail/actions/workflows/validate-pr.yml)
+[![Total Covers](https://img.shields.io/badge/covers-13%2C200%2B-blue.svg)](#-catalog-statistics)
+[![Platforms](https://img.shields.io/badge/platforms-PSP%20%7C%20PSX%20%7C%20Homebrew-orange.svg)](#-supported-platforms)
+[![Powered By GameDiary](https://img.shields.io/badge/powered%20by-GameDiary-emerald.svg)](https://gamediary.onimock.com)
 
-## 📁 Folder Structure
-- `psx/Named_Titles/`: Place PlayStation 1 covers here (.png).
-- `psp/Named_Titles/`: Place PSP covers here (.png).
+A high-performance, open-source repository organizing and mapping official and community boxart covers for **PlayStation Portable (PSP)**, **PlayStation 1 (PSX)**, and **Homebrew** games.
 
-## 🚀 How to Update Everything
-Whenever you add new images or want to update the site mapping, open your terminal in the root of this project and run:
+Covers are mapped to canonical Game IDs / Serials (`ULUS-10041`, `SLUS-00068`, `HBX0C92FFCF`), enabling instant cover resolution in Web Apps, Emulators, Launchers, Frontend Hubs, and Discord Bots via GitHub Raw or jsDelivr CDN with zero backend required.
 
-```powershell
+> **Idioma / Language:** [English](#english-documentation) • [Português](#documentação-em-português)
+
+---
+
+<a name="english-documentation"></a>
+
+## 📊 Catalog Statistics
+
+| Platform | Games with Covers | Directory Path | Metadata Catalog |
+| :--- | :---: | :--- | :--- |
+| **PlayStation Portable (PSP)** | **2,900+** | `psp/Named_Titles/` | `psp/PSP.data.json` |
+| **PlayStation 1 (PSX)** | **10,300+** | `psx/Named_Titles/` | `psx/PSX.data.json` |
+| **Homebrew (PSP & Custom)** | **Growing** | `homebrew/Named_Titles/` | `homebrew/HOMEBREW.data.json` |
+| **Global Combined Map** | **13,200+** | `full_game_map.json` | All platforms combined |
+
+---
+
+## 🚀 How to Use in Your Project
+
+You do not need to clone this repository to use the covers. You can fetch mappings and images directly from the CDN.
+
+### 1. Direct CDN Endpoints
+
+#### Global Combined Map (All Platforms)
+```text
+https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/full_game_map.json
+```
+*(Also available via jsDelivr CDN for high-performance edge caching):*
+```text
+https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/full_game_map.json
+```
+
+#### Platform-Specific Maps
+- **PSP:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/game_id_to_image.json`
+- **PS1 (PSX):** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psx/game_id_to_image.json`
+- **Homebrew:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/homebrew/game_id_to_image.json`
+
+#### Image Base URL
+```text
+https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/<IMAGE_PATH>
+```
+
+---
+
+### 2. Integration Examples
+
+#### JavaScript / TypeScript (Web App, Node.js, Electron)
+
+```typescript
+// 1. Fetch the mapping dictionary once (cache in memory or LocalStorage)
+const MAP_URL = 'https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/full_game_map.json';
+const CDN_BASE = 'https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/';
+
+let coverMap: Record<string, string | null> = {};
+
+async function initCoverMap() {
+  const response = await fetch(MAP_URL);
+  coverMap = await response.json();
+}
+
+// 2. Resolve a cover URL by Game ID / Serial
+function getCoverUrl(gameId: string): string | null {
+  // Normalize serial: remove hyphens, spaces, and uppercase (e.g., 'ULUS-10041' -> 'ULUS10041')
+  const cleanId = gameId.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const relativePath = coverMap[cleanId];
+
+  if (!relativePath) {
+    return null; // Fallback or placeholder
+  }
+
+  // Construct final URL (encode path to handle special title characters safely)
+  const encodedPath = relativePath.split('/').map(encodeURIComponent).join('/');
+  return `${CDN_BASE}${encodedPath}`;
+}
+
+// Example usage:
+// getCoverUrl('ULUS-10041') -> 'https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/Named_Titles/Persona%203%20Portable.png'
+// getCoverUrl('SLUS-00068') -> 'https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psx/Named_Titles/Crash%20Bandicoot.png'
+```
+
+#### Python (Emulators, Scrapers, CLI Tools)
+
+```python
+import requests
+import urllib.parse
+import re
+
+CDN_BASE = "https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/"
+MAP_URL = f"{CDN_BASE}full_game_map.json"
+
+# Load map
+catalog = requests.get(MAP_URL).json()
+
+def resolve_cover(game_id: str) -> str | None:
+    clean_id = re.sub(r"[^A-Za-z0-9]", "", game_id).upper()
+    relative_path = catalog.get(clean_id)
+    if not relative_path:
+        return None
+    return CDN_BASE + urllib.parse.quote(relative_path)
+
+print(resolve_cover("ULUS-10041"))
+# https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/Named_Titles/Persona%203%20Portable.png
+```
+
+---
+
+## 🎨 Cover Image Standards & Specifications
+
+To maintain high visual quality across applications, all submitted covers must follow these guidelines:
+
+1. **File Format:** True **PNG** format strictly (`.png`). Renamed JPEG or WebP files are automatically rejected by validation tests.
+2. **Aspect Ratio:** Vertical box art with approximately **2:3 ratio** (e.g., 300x450, 600x900, or original box dimensions).
+3. **Naming Convention:**
+   - Must be placed under the respective platform folder: `psp/Named_Titles/`, `psx/Named_Titles/`, or `homebrew/Named_Titles/`.
+   - The file name should match the **canonical game title** (e.g. `Grand Theft Auto - Liberty City Stories.png`).
+4. **Resolution & Quality:** Clean edges, sharp artwork, no aggressive watermark, and no corrupt scanlines.
+
+---
+
+## 🤝 How to Contribute
+
+We welcome community contributions! You can submit covers through either of the following methods:
+
+### Option 1: Via GameDiary Web App (Easiest & Automated)
+1. Open [GameDiary](https://gamediary.onimock.com).
+2. Find or add your game.
+3. Open the cover editor, upload your image (PNG, JPG, or WebP), and adjust the frame.
+4. Click **"Contribute to Community"** (*Contribuir com a Comunidade*).
+5. The application converts the image to a standardized PNG, checks for duplicates, and automatically opens a Pull Request on GitHub for you!
+
+### Option 2: Via Manual GitHub Pull Request
+
+1. **Fork** this repository and clone your fork.
+2. Prepare your cover image according to the [Cover Standards](#-cover-image-standards--specifications).
+3. **For PSP:**
+   - Place the image in `psp/Named_Titles/<Canonical Game Title>.png`.
+   - The Game ID must exist in `psp/PSP.data.json`.
+4. **For PS1 (PSX):**
+   - Place the image in `psx/Named_Titles/<Canonical Game Title>.png`.
+   - The Game ID must exist in `psx/PSX.data.json`.
+5. **For Homebrew:**
+   - Place the image in `homebrew/Named_Titles/<Game Title>.png`.
+   - Create an individual metadata file in `homebrew/entries/<GAME_ID>.json`:
+     ```json
+     {
+       "game_id": "HBX0C92FFCF",
+       "title": "My Homebrew Title",
+       "author": "Developer or Team",
+       "platform": "PSP",
+       "version": "1.0.0",
+       "category": "Game",
+       "description": "Short summary of the homebrew project."
+     }
+     ```
+6. Open a Pull Request targeting the `main` branch.
+7. The automated CI workflow ([`validate-pr.yml`](.github/workflows/validate-pr.yml)) will verify your image integrity and catalog entries automatically.
+8. Once merged, the consolidation pipeline will automatically update all mapping files.
+
+---
+
+## ⚙️ Repository Automation & Architecture
+
+This repository uses automated GitHub Actions workflows to guarantee zero manual maintenance after merging:
+
+- **`.github/workflows/validate-pr.yml`:**
+  - Runs automatically on every Pull Request.
+  - Verifies PNG binary signature, chunks, and data integrity.
+  - Validates Homebrew JSON entry schema.
+  - Checks for duplicates against the existing catalog.
+- **`.github/workflows/consolidate-catalog.yml`:**
+  - Runs automatically on merge to `main`.
+  - Executes Python generators:
+    1. `auto_rename_assets.py` (standardizes titles).
+    2. `psx/generate_psx_image_map.py` (builds PS1 map).
+    3. `psp/generate_psp_image_map.py` (builds PSP map).
+    4. `homebrew/consolidate_homebrew_catalog.py` (consolidates modular `entries/*.json` into `HOMEBREW.data.json`).
+    5. `homebrew/generate_homebrew_image_map.py` (builds Homebrew map).
+    6. `generate_full_map.py` (merges all platform maps into `full_game_map.json`).
+  - Automatically commits and pushes the updated maps back to `main`.
+
+---
+
+## 💻 Local Development & Maintenance
+
+If you are developing locally or maintaining the repository scripts:
+
+### Requirements
+- Python 3.9+
+- Pillow (`pip install pillow`)
+
+### Update All Maps Locally
+```bash
 python update_all.py
 ```
 
-### What this command does:
-1. **Auto-Rename**: Automatically renames files named after IDs (e.g., `ULUS10102.png`) to the actual game title.
-2. **Platform Mapping**: Generates individual mapping files for PSX and PSP.
-3. **Full Merge**: Generates the final `full_game_map.json` file used by the website.
+### Validate PR Rules Locally
+```bash
+python validate_pr.py
+```
 
 ---
-*Tip: Keep the .json files in the root (`PSX.data.json`, etc.) updated to ensure the best possible mapping.*
+
+<a name="documentação-em-português"></a>
+
+## 🇧🇷 Documentação em Português
+
+### Visão Geral
+O **Games-Thumbnail** é um repositório aberto de capas e metadados de jogos para **PlayStation Portable (PSP)**, **PlayStation 1 (PSX)** e **Homebrews**. O objetivo principal é fornecer uma fonte pública e veloz de capas de jogos mapeadas diretamente pelos Serials/IDs (`ULUS10041`, `SLUS00068`, etc.), pronta para consumo em sites, emuladores, launchers e bots.
+
+### Como usar no seu projeto
+Não é necessário clonar o repositório. Você pode consumir diretamente via CDN do GitHub ou jsDelivr:
+
+1. **Baixe o mapa global:**
+   ```text
+   https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/full_game_map.json
+   ```
+2. **Consulte a capa pelo Game ID limpo (sem traços ou espaços):**
+   - Entrada: `ULUS-10041` -> Chave no JSON: `ULUS10041`
+   - Retorno relativo: `psp/Named_Titles/Persona 3 Portable.png`
+   - URL final da imagem:
+     ```text
+     https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/Named_Titles/Persona%203%20Portable.png
+     ```
+
+### Padrão das Capas
+- **Formato:** Exclusivamente **PNG** verdadeiro (`.png`).
+- **Proporção:** Orientação vertical com aspecto aproximado de **2:3**.
+- **Nome do arquivo:** Nome canônico oficial do jogo (ex: `Crash Bandicoot.png`).
+
+### Como Contribuir
+- **Pelo GameDiary (Mais fácil):** Acesse [GameDiary](https://gamediary.onimock.com), ajuste a capa no editor de corte e clique em *"Contribuir com a Comunidade"*. O envio cria o Pull Request automaticamente no GitHub!
+- **Manualmente via GitHub:** Faça um fork deste repositório, adicione a imagem PNG na pasta correta (`psp/Named_Titles/`, `psx/Named_Titles/` ou `homebrew/Named_Titles/`) e, no caso de Homebrew, adicione o arquivo de metadados em `homebrew/entries/<GAME_ID>.json`. Abra o Pull Request para a branch `main`.
+
+---
+
+## 📜 License & Credits
+
+- Catalog & metadata curated by [OniMock](https://github.com/OniMock).
+- Integrated with and powered by [GameDiary](https://gamediary.onimock.com).
+- Game cover artwork belongs to their respective publishers and copyright holders. Contributed artwork is archived strictly for personal library organization, cataloging, and preservation purposes.
