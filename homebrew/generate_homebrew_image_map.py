@@ -2,6 +2,10 @@ import os
 import json
 import re
 from pathlib import Path
+try:
+    from .consolidate_homebrew_catalog import run_consolidation
+except ImportError:
+    from consolidate_homebrew_catalog import run_consolidation
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -35,6 +39,8 @@ def get_png_filenames() -> dict:
     return mapping
 
 def main():
+    # Consolidate entries/ into HOMEBREW.data.json before building image map
+    run_consolidation()
     data = load_data()
     png_map = get_png_filenames()
     result = {}

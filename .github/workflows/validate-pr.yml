@@ -1,0 +1,42 @@
+name: Validate Contribution PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'homebrew/entries/**'
+      - 'homebrew/Named_Titles/**'
+      - 'psp/Named_Titles/**'
+      - 'psx/Named_Titles/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate Entry Integrity & Mapping
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Test Suite & Contribution Validation
+        run: |
+          echo "=== 1. Homebrew Consolidator Unit Tests ==="
+          python homebrew/test_consolidate_catalog.py
+
+          echo "=== 2. Platform PR Flow Integration Tests ==="
+          python test_platform_pr_flows.py
+
+          echo "=== 3. Pull Request Validation Suite (Dry Run) ==="
+          python validate_pr.py
+          echo "PR validation successful: all contributions conform to platform specifications."

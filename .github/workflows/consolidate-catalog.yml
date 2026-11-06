@@ -1,0 +1,82 @@
+name: Consolidate Catalogs and Game Maps
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'psp/Named_Titles/**'
+      - 'psx/Named_Titles/**'
+      - 'homebrew/Named_Titles/**'
+      - 'homebrew/entries/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    name: Consolidate Catalogs, Entries and Update Maps
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Catalog & Map Update Sequence
+        run: |
+          echo "=== 1. Auto-Rename Assets ==="
+          python auto_rename_assets.py
+
+          echo "=== 2. Generate PSX Map ==="
+          python psx/generate_psx_image_map.py
+
+          echo "=== 3. Generate PSP Map ==="
+          python psp/generate_psp_image_map.py
+
+          echo "=== 4. Consolidate Homebrew Entries ==="
+          python homebrew/consolidate_homebrew_catalog.py
+
+          echo "=== 5. Generate Homebrew Map ==="
+          python homebrew/generate_homebrew_image_map.py
+
+          echo "=== 6. Generate Full Game Map ==="
+          python generate_full_map.py
+
+      - name: Commit and Push Consolidated Maps (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stage strictly generated maps, logs, and any asset renames performed by auto_rename_assets
+          git add full_game_map.json \
+                  psp/game_id_to_image.json \
+                  psx/game_id_to_image.json \
+                  homebrew/HOMEBREW.data.json \
+                  homebrew/game_id_to_image.json
+
+          # Stage error logs if modified/created
+          for log_file in psp/psp_mapping_errors.log psx/psx_mapping_errors.log homebrew/homebrew_mapping_errors.log; do
+            if [ -f "$log_file" ]; then
+              git add "$log_file"
+            fi
+          done
+
+          # Stage any file renames performed by auto_rename_assets in Named_Titles folders
+          git add -u psp/Named_Titles/ psx/Named_Titles/ homebrew/Named_Titles/ 2>/dev/null || true
+
+          if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
+            git commit -m "chore(catalog): consolidate catalogs and game maps [skip ci]"
+            git push origin main
+            echo "Consolidated catalogs and maps updated and pushed successfully."
+          else
+            echo "No catalog or map changes detected. Working tree clean."
+          fi
