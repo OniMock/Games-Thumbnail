@@ -2,8 +2,8 @@
 
 [![Catalog Consolidation](https://github.com/OniMock/Games-Thumbnail/actions/workflows/consolidate-catalog.yml/badge.svg)](https://github.com/OniMock/Games-Thumbnail/actions/workflows/consolidate-catalog.yml)
 [![PR Validation](https://github.com/OniMock/Games-Thumbnail/actions/workflows/validate-pr.yml/badge.svg)](https://github.com/OniMock/Games-Thumbnail/actions/workflows/validate-pr.yml)
-[![Total Covers](https://img.shields.io/badge/covers-13%2C200%2B-blue.svg)](#-catalog-statistics)
-[![Platforms](https://img.shields.io/badge/platforms-PSP%20%7C%20PSX%20%7C%20Homebrew-orange.svg)](#-catalog-statistics)
+[![Total Covers](https://img.shields.io/badge/covers-13%2C200%2B-blue.svg)](#catalog-statistics)
+[![Platforms](https://img.shields.io/badge/platforms-PSP%20%7C%20PSX%20%7C%20Homebrew-orange.svg)](#catalog-statistics)
 [![Powered By GameDiary](https://img.shields.io/badge/powered%20by-GameDiary-emerald.svg)](https://gamediary.onimock.com)
 
 A high-performance, open-source repository organizing and mapping official and community boxart covers for **PlayStation Portable (PSP)**, **PlayStation 1 (PSX)**, and **Homebrew** games.
@@ -12,7 +12,7 @@ Covers are mapped to canonical Game IDs / Serials (`ULUS-10041`, `SLUS-00068`, `
 
 ---
 
-## 📊 Catalog Statistics
+## Catalog Statistics
 
 | Platform | Games with Covers | Directory Path | Metadata Catalog |
 | :--- | :---: | :--- | :--- |
@@ -23,7 +23,7 @@ Covers are mapped to canonical Game IDs / Serials (`ULUS-10041`, `SLUS-00068`, `
 
 ---
 
-## 🚀 How to Use in Your Project
+## How to Use in Your Project
 
 You do not need to clone this repository to use the covers. You can fetch mappings and images directly from the CDN.
 
@@ -112,7 +112,7 @@ print(resolve_cover("ULUS-10041"))
 
 ---
 
-## 🎨 Cover Image Standards & Specifications
+## Cover Image Standards & Specifications
 
 To maintain high visual quality across applications, all submitted covers must follow these guidelines:
 
@@ -125,7 +125,7 @@ To maintain high visual quality across applications, all submitted covers must f
 
 ---
 
-## 🤝 How to Contribute
+## How to Contribute
 
 We welcome community contributions! You can submit covers through either of the following methods:
 
@@ -139,7 +139,7 @@ We welcome community contributions! You can submit covers through either of the 
 ### Option 2: Via Manual GitHub Pull Request
 
 1. **Fork** this repository and clone your fork.
-2. Prepare your cover image according to the [Cover Standards](#-cover-image-standards--specifications).
+2. Prepare your cover image according to the [Cover Standards](#cover-image-standards--specifications).
 3. **For PSP:**
    - Place the image in `psp/Named_Titles/<Canonical Game Title>.png`.
    - The Game ID must exist in `psp/PSP.data.json`.
@@ -166,7 +166,7 @@ We welcome community contributions! You can submit covers through either of the 
 
 ---
 
-## ⚙️ Repository Automation & Architecture
+## Repository Automation & Architecture
 
 This repository uses automated GitHub Actions workflows to guarantee zero manual maintenance after merging:
 
@@ -188,7 +188,7 @@ This repository uses automated GitHub Actions workflows to guarantee zero manual
 
 ---
 
-## 💻 Local Development & Maintenance
+## Local Development & Maintenance
 
 If you are developing locally or maintaining the repository scripts:
 
@@ -208,23 +208,23 @@ python validate_pr.py
 
 ---
 
-## 📜 Credits & Acknowledgments
+## Credits & Acknowledgments
 
 This project is a compilation and mapping bridge built upon the hard work of retro gaming preservation communities:
 
-### 🖼️ Cover Art & Thumbnails
+### Cover Art & Thumbnails
 - **[Libretro Thumbnails Project](https://github.com/libretro-thumbnails):**
   - **PSX / PS1:** [`libretro-thumbnails/Sony_-_PlayStation`](https://github.com/libretro-thumbnails/Sony_-_PlayStation) (`Named_Titles` / `Named_Boxarts`)
   - **PSP:** [`libretro-thumbnails/Sony_-_PlayStation_Portable`](https://github.com/libretro-thumbnails/Sony_-_PlayStation_Portable) (`Named_Titles` / `Named_Boxarts`)
 - Standardized game titles and filenames conform to the naming conventions established by the **[No-Intro](https://www.no-intro.org/)** and **[Redump.org](http://redump.org/)** preservation projects.
 - New and updated covers submitted by community members via [GameDiary](https://gamediary.onimock.com).
 
-### 🗄️ Metadata Catalogs & Databases
+### Metadata Catalogs & Databases
 - **[niemasd/GameDB-PSX](https://github.com/niemasd/GameDB-PSX):** Comprehensive PlayStation 1 metadata index (`PSX.data.json`), compiled from the PSX Data Center.
 - **[niemasd/GameDB-PSP](https://github.com/niemasd/GameDB-PSP):** PlayStation Portable metadata index (`PSP.data.json`), compiled from official UMD and digital release records.
 - **GameDiary Community:** Curated catalog for PlayStation Portable Homebrew applications and games (`homebrew/entries/`).
 
-### ⚖️ Disclaimer & Copyright
+### Disclaimer & Copyright
 - Compilation, automated mapping scripts, and CI/CD pipelines created and maintained by [OniMock](https://github.com/OniMock) for [GameDiary](https://gamediary.onimock.com).
 - All game cover artwork, trademarks, titles, and logos belong to their respective publishers, developers, and copyright holders (Sony Interactive Entertainment, Konami, Capcom, Square Enix, Bandai Namco, Sega, EA, etc.).
 - Artwork is mirrored and indexed strictly for personal library organization, cataloging, non-commercial interoperability, and digital preservation.
