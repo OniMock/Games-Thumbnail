@@ -243,10 +243,30 @@ Não é necessário clonar o repositório. Você pode consumir diretamente via C
 - **Pelo GameDiary (Mais fácil):** Acesse [GameDiary](https://gamediary.onimock.com), ajuste a capa no editor de corte e clique em *"Contribuir com a Comunidade"*. O envio cria o Pull Request automaticamente no GitHub!
 - **Manualmente via GitHub:** Faça um fork deste repositório, adicione a imagem PNG na pasta correta (`psp/Named_Titles/`, `psx/Named_Titles/` ou `homebrew/Named_Titles/`) e, no caso de Homebrew, adicione o arquivo de metadados em `homebrew/entries/<GAME_ID>.json`. Abra o Pull Request para a branch `main`.
 
+### Créditos e Agradecimentos
+- **Capas e Thumbnails:** Coletadas e estruturadas a partir dos repositórios da comunidade [Libretro Thumbnails](https://github.com/libretro-thumbnails) ([Sony - PlayStation](https://github.com/libretro-thumbnails/Sony_-_PlayStation) e [Sony - PlayStation Portable](https://github.com/libretro-thumbnails/Sony_-_PlayStation_Portable)), seguindo as convenções de nomenclatura do [No-Intro](https://www.no-intro.org/) e [Redump.org](http://redump.org/).
+- **Bancos de Dados de Metadados:** Estruturados a partir dos projetos [GameDB-PSX](https://github.com/niemasd/GameDB-PSX) e [GameDB-PSP](https://github.com/niemasd/GameDB-PSP) mantidos por [niemasd](https://github.com/niemasd), integrados aos dados do PSX Data Center e UMD Database.
+- **Contribuições Comunitárias:** Mantido e expandido continuamente pela comunidade através do [GameDiary](https://gamediary.onimock.com).
+
 ---
 
-## 📜 License & Credits
+## 📜 Credits & Acknowledgments
 
-- Catalog & metadata curated by [OniMock](https://github.com/OniMock).
-- Integrated with and powered by [GameDiary](https://gamediary.onimock.com).
-- Game cover artwork belongs to their respective publishers and copyright holders. Contributed artwork is archived strictly for personal library organization, cataloging, and preservation purposes.
+This project is a compilation and mapping bridge built upon the hard work of retro gaming preservation communities:
+
+### 🖼️ Cover Art & Thumbnails
+- **[Libretro Thumbnails Project](https://github.com/libretro-thumbnails):**
+  - **PSX / PS1:** [`libretro-thumbnails/Sony_-_PlayStation`](https://github.com/libretro-thumbnails/Sony_-_PlayStation) (`Named_Titles` / `Named_Boxarts`)
+  - **PSP:** [`libretro-thumbnails/Sony_-_PlayStation_Portable`](https://github.com/libretro-thumbnails/Sony_-_PlayStation_Portable) (`Named_Titles` / `Named_Boxarts`)
+- Standardized game titles and filenames conform to the naming conventions established by the **[No-Intro](https://www.no-intro.org/)** and **[Redump.org](http://redump.org/)** preservation projects.
+- New and updated covers submitted by community members via [GameDiary](https://gamediary.onimock.com).
+
+### 🗄️ Metadata Catalogs & Databases
+- **[niemasd/GameDB-PSX](https://github.com/niemasd/GameDB-PSX):** Comprehensive PlayStation 1 metadata index (`PSX.data.json`), compiled from the PSX Data Center.
+- **[niemasd/GameDB-PSP](https://github.com/niemasd/GameDB-PSP):** PlayStation Portable metadata index (`PSP.data.json`), compiled from official UMD and digital release records.
+- **GameDiary Community:** Curated catalog for PlayStation Portable Homebrew applications and games (`homebrew/entries/`).
+
+### ⚖️ Disclaimer & Copyright
+- Compilation, automated mapping scripts, and CI/CD pipelines created and maintained by [OniMock](https://github.com/OniMock) for [GameDiary](https://gamediary.onimock.com).
+- All game cover artwork, trademarks, titles, and logos belong to their respective publishers, developers, and copyright holders (Sony Interactive Entertainment, Konami, Capcom, Square Enix, Bandai Namco, Sega, EA, etc.).
+- Artwork is mirrored and indexed strictly for personal library organization, cataloging, non-commercial interoperability, and digital preservation.
