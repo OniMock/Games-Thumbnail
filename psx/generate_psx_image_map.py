@@ -89,9 +89,9 @@ def main():
                 fname = png_map[c]
                 fpath = NAMED_TITLES_DIR / fname
                 if fpath.exists():
-                    # If it's a "Disc" file, check size. If < 5KB, we'll try to find a better one.
-                    if "disc" in fname.lower() and fpath.stat().st_size < 5120:
-                        continue # Skip this small disc image
+                    # If file is too small (< 5KB), it's likely a text pointer or placeholder; skip and find a better match
+                    if fpath.stat().st_size < 5120:
+                        continue
                     
                     found_filename = fname
                     break
