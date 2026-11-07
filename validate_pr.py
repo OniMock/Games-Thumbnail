@@ -5,9 +5,13 @@ across PSP, PS1 (PSX), and Homebrew platforms.
 
 Validates:
 1. Valid binary PNG (Magic Bytes: 0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A).
-2. Naming convention and catalog correspondence.
-3. Homebrew entry integrity and absence of duplicate IDs.
-4. Clean dry-run of map consolidation.
+2. Platform-specific aspect ratio and dimensions:
+   - PSX: 1:1 aspect ratio (square jewel case, e.g. 272x272, min 80x80).
+   - PSP: ~1.8:1 aspect ratio (horizontal banner, 1.70 - 1.86, e.g. 144x80, 480x272).
+   - Homebrew: ~1.8:1 aspect ratio (horizontal banner, 1.70 - 1.86, or 1:1 if targeting PSX).
+3. Naming convention and catalog correspondence.
+4. Homebrew entry integrity and absence of duplicate IDs.
+5. Clean dry-run of map consolidation.
 
 Exit code 0 on success, non-zero on failure.
 DOES NOT modify repository state or make commits.
@@ -17,6 +21,7 @@ import sys
 import os
 import json
 import re
+import struct
 import subprocess
 from pathlib import Path
 
@@ -48,6 +53,110 @@ def validate_png_magic_bytes(filepath: Path) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Error reading {filepath.name}: {e}"
     return True, "Valid PNG"
+
+def get_png_dimensions(filepath: Path) -> tuple[int, int] | None:
+    """Reads width and height from PNG IHDR chunk without external image libraries."""
+    try:
+        with open(filepath, 'rb') as f:
+            header = f.read(24)
+            if len(header) < 24:
+                return None
+            if header[:8] != PNG_MAGIC_BYTES:
+                return None
+            if header[12:16] != b'IHDR':
+                return None
+            width, height = struct.unpack('>II', header[16:24])
+            return width, height
+    except Exception:
+        return None
+
+def validate_png_dimensions_and_ratio(filepath: Path) -> tuple[bool, str]:
+    """
+    Validates platform-specific aspect ratio and dimension standards:
+    - PSX: 1:1 aspect ratio (square, e.g. 272x272, min 80x80).
+    - PSP: ~1.8:1 aspect ratio (horizontal banner, 1.70 - 1.86, min 120x60).
+    - Homebrew: ~1.8:1 aspect ratio (horizontal banner, 1.70 - 1.86, or 1:1 if targeting PSX).
+    """
+    dims = get_png_dimensions(filepath)
+    if not dims:
+        return False, f"File '{filepath.name}' is corrupt or missing standard PNG IHDR header."
+
+    width, height = dims
+    if width <= 0 or height <= 0:
+        return False, f"File '{filepath.name}' has invalid dimensions ({width}x{height})."
+
+    parts = [p.lower() for p in filepath.parts]
+    ratio = width / height
+
+    if 'psx' in parts:
+        if not (0.95 <= ratio <= 1.05):
+            return False, (
+                f"PSX cover '{filepath.name}' must have a 1:1 aspect ratio (square jewel case, e.g. 272x272). "
+                f"Detected dimensions: {width}x{height} (aspect ratio {ratio:.2f}:1)."
+            )
+        if width < 80 or height < 80:
+            return False, (
+                f"PSX cover '{filepath.name}' is too small ({width}x{height}). "
+                f"Minimum resolution is 80x80 (recommended: 272x272)."
+            )
+        return True, f"Valid PSX dimensions: {width}x{height} (1:1)"
+
+    if 'psp' in parts:
+        if not (1.70 <= ratio <= 1.86):
+            return False, (
+                f"PSP cover '{filepath.name}' must have approximately a 1.8:1 aspect ratio (horizontal banner, e.g. 144x80, 480x272). "
+                f"Detected dimensions: {width}x{height} (aspect ratio {ratio:.2f}:1)."
+            )
+        if width < 120 or height < 60:
+            return False, (
+                f"PSP cover '{filepath.name}' is too small ({width}x{height}). "
+                f"Minimum resolution is 144x80."
+            )
+        return True, f"Valid PSP dimensions: {width}x{height} (1.8:1)"
+
+    if 'homebrew' in parts:
+        # Check if the homebrew entry explicitly targets PSX
+        is_psx_homebrew = False
+        stem = normalize_str(filepath.stem)
+        entries_dir = BASE_DIR / 'homebrew' / 'entries'
+        if entries_dir.exists():
+            for ent_file in entries_dir.glob('*.json'):
+                try:
+                    with open(ent_file, 'r', encoding='utf-8') as ef:
+                        data = json.load(ef)
+                        title_clean = normalize_str(data.get('title', ''))
+                        serial_clean = normalize_str(data.get('serial', ''))
+                        if stem == title_clean or stem == serial_clean or stem == normalize_str(ent_file.stem):
+                            if str(data.get('platform', '')).upper() == 'PSX' or data.get('category') == 1:
+                                is_psx_homebrew = True
+                                break
+                except Exception:
+                    pass
+
+        if is_psx_homebrew:
+            if not (0.95 <= ratio <= 1.05):
+                return False, (
+                    f"Homebrew PSX cover '{filepath.name}' must have a 1:1 aspect ratio (square, e.g. 272x272). "
+                    f"Detected dimensions: {width}x{height} (aspect ratio {ratio:.2f}:1)."
+                )
+            if width < 80 or height < 80:
+                return False, (
+                    f"Homebrew PSX cover '{filepath.name}' is too small ({width}x{height}). Minimum resolution is 80x80."
+                )
+            return True, f"Valid Homebrew PSX dimensions: {width}x{height} (1:1)"
+        else:
+            if not (1.70 <= ratio <= 1.86):
+                return False, (
+                    f"Homebrew cover '{filepath.name}' must have approximately a 1.8:1 aspect ratio (horizontal banner, e.g. 144x80). "
+                    f"Detected dimensions: {width}x{height} (aspect ratio {ratio:.2f}:1)."
+                )
+            if width < 120 or height < 60:
+                return False, (
+                    f"Homebrew cover '{filepath.name}' is too small ({width}x{height}). Minimum resolution is 144x80."
+                )
+            return True, f"Valid Homebrew PSP dimensions: {width}x{height} (1.8:1)"
+
+    return True, f"Valid dimensions: {width}x{height}"
 
 def load_catalog(filepath: Path) -> dict:
     if not filepath.exists():
@@ -163,6 +272,11 @@ def validate_contributed_images(changed_files: list[str]) -> list[str]:
         is_valid, msg = validate_png_magic_bytes(filepath)
         if not is_valid:
             errors.append(msg)
+            continue
+
+        is_valid_dims, dims_msg = validate_png_dimensions_and_ratio(filepath)
+        if not is_valid_dims:
+            errors.append(dims_msg)
 
     return errors
 
@@ -206,14 +320,14 @@ def main():
         print("  [OK] All Homebrew entries are valid and unique.")
 
     # 2. Validate PNG magic bytes & format
-    print("\n[2/3] Validating contributed PNG assets...")
+    print("\n[2/3] Validating contributed PNG assets (format, dimensions & aspect ratio)...")
     img_errors = validate_contributed_images(changed)
     if img_errors:
         all_errors.extend(img_errors)
         for err in img_errors:
             print(f"  [ERROR] {err}")
     else:
-        print("  [OK] Contributed image assets have valid PNG magic bytes.")
+        print("  [OK] Contributed image assets have valid PNG magic bytes and conform to platform aspect ratio.")
 
     # 3. Dry-run consolidation and map generation
     print("\n[3/3] Testing catalog consolidation and map build...")

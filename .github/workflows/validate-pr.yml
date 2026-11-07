@@ -37,6 +37,9 @@ jobs:
           echo "=== 2. Platform PR Flow Integration Tests ==="
           python test_platform_pr_flows.py
 
-          echo "=== 3. Pull Request Validation Suite (Dry Run) ==="
+          echo "=== 3. PR Aspect Ratio & Dimension Unit Tests ==="
+          python test_validate_pr.py
+
+          echo "=== 4. Pull Request Validation Suite (Dry Run) ==="
           python validate_pr.py
           echo "PR validation successful: all contributions conform to platform specifications."

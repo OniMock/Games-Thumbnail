@@ -117,7 +117,10 @@ print(resolve_cover("ULUS-10041"))
 To maintain high visual quality across applications, all submitted covers must follow these guidelines:
 
 1. **File Format:** True **PNG** format strictly (`.png`). Renamed JPEG or WebP files are automatically rejected by validation tests.
-2. **Aspect Ratio:** Vertical box art with approximately **2:3 ratio** (e.g., 300x450, 600x900, or original box dimensions).
+2. **Aspect Ratio & Platform Specifications:**
+   - **PlayStation 1 (PSX):** Strict **1:1 aspect ratio** (Square jewel case front cover, e.g. `272×272`, `500×500`, `1000×1000`). Minimum size: `80×80`.
+   - **PlayStation Portable (PSP):** Approximately **1.8:1 aspect ratio** (Horizontal title banner, e.g. `144×80` or `480×272`). Minimum size: `144×80`.
+   - **Homebrew:** Approximately **1.8:1 aspect ratio** (Horizontal banner matching PSP homebrew launchers, e.g. `144×80`), or **1:1** if explicitly targeting PSX homebrew.
 3. **Naming Convention:**
    - Must be placed under the respective platform folder: `psp/Named_Titles/`, `psx/Named_Titles/`, or `homebrew/Named_Titles/`.
    - The file name should match the **canonical game title** (e.g. `Grand Theft Auto - Liberty City Stories.png`).
