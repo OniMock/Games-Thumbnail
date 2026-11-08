@@ -11,6 +11,10 @@ on:
       - 'homebrew/entries/**'
   workflow_dispatch:
 
+concurrency:
+  group: catalog-consolidation
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -51,17 +55,21 @@ jobs:
           echo "=== 6. Generate Full Game Map ==="
           python generate_full_map.py
 
+          echo "=== 7. Generate By-ID Cover Aliases ==="
+          python generate_by_id_aliases.py
+
       - name: Commit and Push Consolidated Maps (if changed)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage strictly generated maps and any asset renames performed by auto_rename_assets
+          # Stage strictly generated maps, by-id aliases, and any asset renames performed by auto_rename_assets
           git add full_game_map.json \
                   psp/game_id_to_image.json \
                   psx/game_id_to_image.json \
                   homebrew/HOMEBREW.data.json \
-                  homebrew/game_id_to_image.json
+                  homebrew/game_id_to_image.json \
+                  by-id/
 
           # Stage any file renames performed by auto_rename_assets in Named_Titles folders
           git add -u psp/Named_Titles/ psx/Named_Titles/ homebrew/Named_Titles/ 2>/dev/null || true
