@@ -1,7 +1,7 @@
 {
   "generator": "generate_by_id_aliases.py",
   "version": 1,
-  "total_aliases": 13238,
+  "total_aliases": 13239,
   "managed_aliases": {
     "homebrew/hbx/hbx282c27b3.png": "dfd784226dfa07a78fbe1c84f433377d0e05b1592104f94fafe983380ef5289f",
     "homebrew/hbx/hbx392abd96.png": "88ba679cfcee0f96dcf9a919f3acade68b853d939135414052b0a7a53fc2bdab",
@@ -5314,6 +5314,7 @@
     "psx/sles01/sles01199.png": "38e797d19295961a7c46f02cf7da2a62094f7b60f79ed46d15940491686c1ad1",
     "psx/sles01/sles01200.png": "38e797d19295961a7c46f02cf7da2a62094f7b60f79ed46d15940491686c1ad1",
     "psx/sles01/sles01201.png": "38e797d19295961a7c46f02cf7da2a62094f7b60f79ed46d15940491686c1ad1",
+    "psx/sles01/sles01202.png": "56e4d4e95e5355b8745c8b560dc26740ecec3017c0a0f73e9a94a2146e83bcac",
     "psx/sles01/sles01203.png": "b07284db69e18843edbfed196b1ee84a265dafd2e530d5e01b6b4f38ce351bc4",
     "psx/sles01/sles01204.png": "812b022f8b8e59cb77444aa5f3fdf34ef7278f23e878ee1298e8c9daf343f38a",
     "psx/sles01/sles01207.png": "55d2e2b79b60ef1acf32b222e7117c3416e6d07006feab248d69c2b6a80b4f41",

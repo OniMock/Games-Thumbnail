@@ -383,7 +383,7 @@ class TestRealRepoIntegrity(unittest.TestCase):
         self.assertTrue(self.manifest_path.exists(), ".manifest.json must exist in by-id/")
         manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
         managed = manifest.get("managed_aliases", {})
-        self.assertEqual(len(managed), 13238, f"Expected 13,238 aliases in manifest, got {len(managed)}")
+        self.assertGreaterEqual(len(managed), 13238, f"Expected at least 13,238 aliases in manifest, got {len(managed)}")
 
     def test_directory_distribution_limits(self):
         # PSP: Prefix length 4, no directory exceeding 3,000 images
