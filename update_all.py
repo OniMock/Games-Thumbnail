@@ -6,7 +6,8 @@ scripts = [
     "psx/generate_psx_image_map.py",
     "psp/generate_psp_image_map.py",
     "homebrew/generate_homebrew_image_map.py",
-    "generate_full_map.py"
+    "generate_full_map.py",
+    "generate_by_id_aliases.py"
 ]
 
 

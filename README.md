@@ -14,34 +14,128 @@ Covers are mapped to canonical Game IDs / Serials (`ULUS-10041`, `SLUS-00068`, [
 
 ## Catalog Statistics
 
-| Platform | Games with Covers | Directory Path | Metadata Catalog |
-| :--- | :---: | :--- | :--- |
-| **PlayStation Portable (PSP)** | **2,900+** | `psp/Named_Titles/` | `psp/PSP.data.json` |
-| **PlayStation 1 (PSX)** | **10,300+** | `psx/Named_Titles/` | `psx/PSX.data.json` |
-| **Homebrew (PSP & Custom)** | **Growing** | `homebrew/Named_Titles/` | `homebrew/HOMEBREW.data.json` |
-| **Global Combined Map** | **13,200+** | `full_game_map.json` | All platforms combined |
+| Platform | Games with Covers | Direct By-ID Path Layout | Canonical Asset Path | Metadata Catalog |
+| :--- | :---: | :--- | :--- | :--- |
+| **PlayStation Portable (PSP)** | **2,916** | `by-id/psp/<prefix4>/<canonical_id>.png` | `psp/Named_Titles/` | `psp/PSP.data.json` |
+| **PlayStation 1 (PSX)** | **10,313** | `by-id/psx/<prefix6>/<canonical_id>.png` | `psx/Named_Titles/` | `psx/PSX.data.json` |
+| **Homebrew (PSP & Custom)** | **9+** | `by-id/homebrew/<family>/<canonical_id>.png` | `homebrew/Named_Titles/` | `homebrew/HOMEBREW.data.json` |
+| **Global Combined Map** | **13,238** | `by-id/` (Deterministic Library) | `full_game_map.json` | All platforms combined |
 
 ---
 
 ## How to Use in Your Project
 
-You do not need to clone this repository to use the covers. You can fetch mappings and images directly from the CDN.
+You do not need to clone this repository to use the covers. You can load covers directly by Game ID or fetch mapping catalogs from the CDN.
 
-### 1. Direct CDN Endpoints
+### 1. Direct Resolution by Game ID (Recommended — $O(1)$, Zero Catalog Download)
 
-#### Global Combined Map (All Platforms)
+Applications, emulators, launchers, and bots can resolve cover images directly from Game IDs in constant time **without downloading `full_game_map.json` (~1 MB)**.
+
+The cover images are available deterministically in `by-id/` via **GitHub Raw** and **jsDelivr CDN**:
+
 ```text
-https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/full_game_map.json
-```
-*(Also available via jsDelivr CDN for high-performance edge caching):*
-```text
-https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/full_game_map.json
+# GitHub Raw:
+https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/by-id/<platform>/<prefix>/<canonical_id>.png
+
+# jsDelivr CDN (Fast Global Edge Caching):
+https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/by-id/<platform>/<prefix>/<canonical_id>.png
 ```
 
-#### Platform-Specific Maps
-- **PSP:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/game_id_to_image.json`
-- **PS1 (PSX):** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psx/game_id_to_image.json`
-- **Homebrew:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/homebrew/game_id_to_image.json`
+#### Deterministic Path Rules
+
+The rules are formally defined in the machine-readable specification [`by-id/path-layout.json`](by-id/path-layout.json):
+
+| Platform | Prefix Rule | Normalization | Example Input ID | Resolved CDN Path |
+| :--- | :--- | :--- | :--- | :--- |
+| **PSP** | 4 chars (`prefix4`) | Strip `-` and spaces, lowercase | `ULUS-10041` | `by-id/psp/ulus/ulus10041.png` |
+| **PSX** | 6 chars (`prefix6`) | Strip `-` and spaces, lowercase | `SLUS-00068` | `by-id/psx/slus00/slus00068.png` |
+| **PSX** | 6 chars (`prefix6`) | Strip `-` and spaces, lowercase | `SLPS-00004` | `by-id/psx/slps00/slps00004.png` |
+| **Homebrew** | Alpha family | Preserve `-` and `_`, lowercase | `ARK_01234` | `by-id/homebrew/ark/ark_01234.png` |
+| **Homebrew** | Standard `HBX` | 8-hex hash family `hbx` | `HBXA1B9195B` | `by-id/homebrew/hbx/hbxa1b9195b.png` |
+| **Homebrew** | Non-alpha start | Fallback folder `misc` | `123_DOOM` | `by-id/homebrew/misc/123_doom.png` |
+
+#### Client Implementation (TypeScript / JavaScript)
+
+```typescript
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/by-id';
+
+export function getDirectCoverUrl(platform: 'psp' | 'psx' | 'homebrew', gameId: string): string {
+  const clean = gameId.trim().toLowerCase();
+
+  if (platform === 'psp') {
+    const canonical = clean.replace(/-/g, '');
+    const prefix = canonical.slice(0, 4);
+    return `${CDN_BASE}/psp/${prefix}/${canonical}.png`;
+  }
+
+  if (platform === 'psx') {
+    const canonical = clean.replace(/-/g, '');
+    const prefix = canonical.slice(0, 6);
+    return `${CDN_BASE}/psx/${prefix}/${canonical}.png`;
+  }
+
+  if (platform === 'homebrew') {
+    let family = 'misc';
+    if (clean.startsWith('hbx') && clean.length === 11) {
+      family = 'hbx';
+    } else {
+      const match = clean.match(/^([a-z]+)/);
+      if (match) family = match[1];
+    }
+    return `${CDN_BASE}/homebrew/${family}/${clean}.png`;
+  }
+
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
+// Examples:
+// getDirectCoverUrl('psp', 'ULUS-10041')   -> 'https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/by-id/psp/ulus/ulus10041.png'
+// getDirectCoverUrl('psx', 'SLUS-00068')   -> 'https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/by-id/psx/slus00/slus00068.png'
+// getDirectCoverUrl('homebrew', 'ARK_01234') -> 'https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/by-id/homebrew/ark/ark_01234.png'
+```
+
+#### Client Implementation (Python)
+
+```python
+import re
+
+CDN_BASE = "https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/by-id"
+
+def get_direct_cover_url(platform: str, game_id: str) -> str:
+    p = platform.lower()
+    clean = game_id.strip().lower()
+
+    if p == "psp":
+        canonical = clean.replace("-", "")
+        return f"{CDN_BASE}/psp/{canonical[:4]}/{canonical}.png"
+    elif p == "psx":
+        canonical = clean.replace("-", "")
+        return f"{CDN_BASE}/psx/{canonical[:6]}/{canonical}.png"
+    elif p == "homebrew":
+        if clean.startswith("hbx") and len(clean) == 11:
+            family = "hbx"
+        else:
+            m = re.match(r"^([a-z]+)", clean)
+            family = m.group(1) if m else "misc"
+        return f"{CDN_BASE}/homebrew/{family}/{clean}.png"
+    raise ValueError(f"Unknown platform: {platform}")
+```
+
+---
+
+### 2. Legacy Resolution via Full Map (`full_game_map.json`)
+
+For applications that prefer to pre-download the full dictionary and resolve titles locally:
+
+#### Direct CDN Endpoints
+
+- **Global Combined Map (All Platforms):**
+  - `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/full_game_map.json`
+  - `https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/full_game_map.json`
+- **Platform Maps:**
+  - **PSP:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psp/game_id_to_image.json`
+  - **PS1 (PSX):** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/psx/game_id_to_image.json`
+  - **Homebrew:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/homebrew/game_id_to_image.json`
 
 #### Image Base URL
 ```text
@@ -264,11 +358,17 @@ This repository uses automated GitHub Actions workflows to guarantee zero manual
 
 - **`.github/workflows/validate-pr.yml`:**
   - Runs automatically on every Pull Request.
-  - Verifies PNG binary signature, chunks, and data integrity.
+  - Verifies PNG binary signature, chunks, dimensions, and aspect ratio integrity.
   - Validates Homebrew JSON entry schema.
-  - Checks for duplicates against the existing catalog.
+  - Checks for duplicate IDs and path traversal attempts.
+  - Executes unit and integration test suites:
+    1. `homebrew/test_consolidate_catalog.py`
+    2. `test_platform_pr_flows.py`
+    3. `test_validate_pr.py`
+    4. `test_generate_by_id.py`
+  - Runs clean side-effect-free dry-run validation (`validate_pr.py`).
 - **`.github/workflows/consolidate-catalog.yml`:**
-  - Runs automatically on merge to `main`.
+  - Runs automatically on merge to `main` with concurrency lock.
   - Executes Python generators:
     1. `auto_rename_assets.py` (standardizes titles).
     2. `psx/generate_psx_image_map.py` (builds PS1 map).
@@ -276,7 +376,8 @@ This repository uses automated GitHub Actions workflows to guarantee zero manual
     4. `homebrew/consolidate_homebrew_catalog.py` (consolidates modular `entries/*.json` into `HOMEBREW.data.json`).
     5. `homebrew/generate_homebrew_image_map.py` (builds Homebrew map).
     6. `generate_full_map.py` (merges all platform maps into `full_game_map.json`).
-  - Automatically commits and pushes the updated maps back to `main`.
+    7. `generate_by_id_aliases.py` (generates and synchronizes deterministic `by-id/` aliases with SHA-256 byte-for-byte validation).
+  - Automatically commits and pushes the updated maps and aliases back to `main`.
 
 ---
 
@@ -288,13 +389,25 @@ If you are developing locally or maintaining the repository scripts:
 - Python 3.9+
 - Pillow (`pip install pillow`)
 
-### Update All Maps Locally
+### Update All Maps and By-ID Aliases Locally
 ```bash
 python update_all.py
 ```
 
-### Validate PR Rules Locally
+### Synchronize By-ID Aliases Independently
 ```bash
+python generate_by_id_aliases.py
+```
+
+### Verify By-ID Aliases Sync & Integrity (Dry-Run / CI)
+```bash
+python generate_by_id_aliases.py --check
+```
+
+### Run Test Suites Locally
+```bash
+python test_generate_by_id.py
+python test_validate_pr.py
 python validate_pr.py
 ```
 

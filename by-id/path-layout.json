@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "description": "Deterministic Game ID Cover Path Layout for Games-Thumbnail",
+  "base_dir": "by-id",
+  "file_extension": "png",
+  "platforms": {
+    "psp": {
+      "prefix_length": 4,
+      "casing": "lowercase",
+      "normalization": {
+        "strip_hyphens": true,
+        "strip_spaces": true,
+        "preserve_underscores": false,
+        "canonical_casing": "uppercase"
+      },
+      "path_pattern": "by-id/psp/{prefix4}/{canonical_id_lowercase}.png",
+      "example": {
+        "raw_id": "ULUS-10041",
+        "canonical_id": "ULUS10041",
+        "relative_path": "by-id/psp/ulus/ulus10041.png"
+      }
+    },
+    "psx": {
+      "prefix_length": 6,
+      "casing": "lowercase",
+      "normalization": {
+        "strip_hyphens": true,
+        "strip_spaces": true,
+        "preserve_underscores": false,
+        "canonical_casing": "uppercase"
+      },
+      "path_pattern": "by-id/psx/{prefix6}/{canonical_id_lowercase}.png",
+      "example": {
+        "raw_id": "SLUS-00068",
+        "canonical_id": "SLUS00068",
+        "relative_path": "by-id/psx/slus00/slus00068.png"
+      }
+    },
+    "homebrew": {
+      "prefix_rule": "alpha_family_or_fallback",
+      "hbx_family": "hbx",
+      "fallback_prefix": "misc",
+      "casing": "lowercase",
+      "normalization": {
+        "strip_hyphens": false,
+        "strip_spaces": true,
+        "preserve_underscores": true,
+        "canonical_casing": "uppercase"
+      },
+      "path_pattern": "by-id/homebrew/{family}/{canonical_id_lowercase}.png",
+      "example": {
+        "raw_id": "ARK_01234",
+        "canonical_id": "ARK_01234",
+        "relative_path": "by-id/homebrew/ark/ark_01234.png"
+      }
+    }
+  }
+}

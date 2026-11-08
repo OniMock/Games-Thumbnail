@@ -133,5 +133,59 @@ class TestValidatePR(unittest.TestCase):
         self.assertIn("not a valid binary PNG", msg)
 
 
+class TestValidationSideEffectFree(unittest.TestCase):
+    """
+    Regression test ensuring that running PR validation (including consolidation dry-run)
+    does NOT alter, rewrite, reformat, or modify bytes of any tracked checkout files,
+    especially homebrew/game_id_to_image.json.
+    """
+
+    def test_validation_does_not_modify_checkout_files(self):
+        base_dir = Path(__file__).resolve().parent
+
+        files_to_track = [
+            base_dir / "homebrew" / "game_id_to_image.json",
+            base_dir / "homebrew" / "HOMEBREW.data.json",
+            base_dir / "full_game_map.json",
+            base_dir / "psp" / "game_id_to_image.json",
+            base_dir / "psx" / "game_id_to_image.json",
+            base_dir / "by-id" / "path-layout.json",
+            base_dir / "by-id" / ".manifest.json",
+        ]
+
+        # 1. Record byte contents before validation
+        before_bytes = {}
+        for f in files_to_track:
+            if f.exists():
+                before_bytes[f] = f.read_bytes()
+
+        self.assertIn(
+            base_dir / "homebrew" / "game_id_to_image.json",
+            before_bytes,
+            "homebrew/game_id_to_image.json must exist and be tracked"
+        )
+
+        # 2. Execute validation flow (Homebrew validation + dry-run consolidation)
+        from validate_pr import dry_run_catalog_consolidation, validate_homebrew_entries
+        hb_errors = validate_homebrew_entries()
+        self.assertEqual(len(hb_errors), 0, f"Expected 0 Homebrew entry errors: {hb_errors}")
+
+        map_errors = dry_run_catalog_consolidation()
+        self.assertEqual(len(map_errors), 0, f"Expected 0 dry-run errors: {map_errors}")
+
+        # 3. Compare bytes after execution
+        modified = []
+        for f, original_data in before_bytes.items():
+            current_data = f.read_bytes()
+            if current_data != original_data:
+                modified.append((str(f.relative_to(base_dir)), len(original_data), len(current_data)))
+
+        # 4. Fail if any original file was modified
+        self.assertEqual(
+            len(modified), 0,
+            f"Validation modified tracked file(s) on disk: {modified}"
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

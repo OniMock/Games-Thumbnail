@@ -23,6 +23,8 @@ import json
 import re
 import struct
 import subprocess
+import tempfile
+import shutil
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -281,21 +283,65 @@ def validate_contributed_images(changed_files: list[str]) -> list[str]:
     return errors
 
 def dry_run_catalog_consolidation() -> list[str]:
-    """Test that consolidate_homebrew_catalog and generate_full_map execute cleanly."""
+    """
+    Test that consolidate_homebrew_catalog, generate_full_map, and alias validation execute cleanly.
+    Runs in an isolated temporary environment to ensure zero side-effects or file modifications
+    on the user's checkout.
+    """
     errors = []
-    try:
-        from homebrew.consolidate_homebrew_catalog import run_consolidation
-        success = run_consolidation()
-        if not success:
-            errors.append("Homebrew consolidation dry-run failed.")
-    except Exception as e:
-        errors.append(f"Exception during Homebrew consolidation dry-run: {e}")
 
-    try:
-        from generate_full_map import merge_mappings
-        merge_mappings()
-    except Exception as e:
-        errors.append(f"Exception during full map generation dry-run: {e}")
+    with tempfile.TemporaryDirectory(prefix="pr_dry_run_") as tmpdir:
+        tmp_path = Path(tmpdir)
+        temp_data = tmp_path / "HOMEBREW.data.json"
+        temp_map = tmp_path / "game_id_to_image.json"
+        temp_log = tmp_path / "homebrew_mapping_errors.log"
+        temp_full_map = tmp_path / "full_game_map.json"
+
+        from homebrew.consolidate_homebrew_catalog import (
+            DATA_JSON, OUTPUT_MAP_JSON, ENTRIES_DIR, NAMED_TITLES_DIR,
+            run_consolidation
+        )
+
+        # Seed with current catalog data as baseline
+        if DATA_JSON.exists():
+            shutil.copyfile(DATA_JSON, temp_data)
+        if OUTPUT_MAP_JSON.exists():
+            shutil.copyfile(OUTPUT_MAP_JSON, temp_map)
+
+        try:
+            success = run_consolidation(
+                data_path=temp_data,
+                entries_dir=ENTRIES_DIR,
+                titles_dir=NAMED_TITLES_DIR,
+                output_map_path=temp_map,
+                error_log_path=temp_log,
+                check_only=False
+            )
+            if not success:
+                errors.append("Homebrew consolidation dry-run failed.")
+        except Exception as e:
+            errors.append(f"Exception during Homebrew consolidation dry-run: {e}")
+
+        try:
+            import generate_full_map
+            orig_output = generate_full_map.OUTPUT_FILE
+            orig_hb_map = generate_full_map.HOMEBREW_MAP
+            generate_full_map.OUTPUT_FILE = temp_full_map
+            if temp_map.exists():
+                generate_full_map.HOMEBREW_MAP = temp_map
+            try:
+                generate_full_map.merge_mappings()
+            finally:
+                generate_full_map.OUTPUT_FILE = orig_output
+                generate_full_map.HOMEBREW_MAP = orig_hb_map
+        except Exception as e:
+            errors.append(f"Exception during full map generation dry-run: {e}")
+
+        try:
+            from generate_by_id_aliases import load_and_validate_sources
+            load_and_validate_sources()
+        except Exception as e:
+            errors.append(f"Exception during By-ID alias validation dry-run: {e}")
 
     return errors
 
