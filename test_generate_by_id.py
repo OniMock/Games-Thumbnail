@@ -13,6 +13,7 @@ Verifies:
 """
 
 import os
+import stat
 import sys
 import json
 import time
@@ -409,6 +410,24 @@ class TestRealRepoIntegrity(unittest.TestCase):
                 if d.is_dir():
                     count = len(list(d.glob("*.png")))
                     self.assertLessEqual(count, 50, f"Homebrew directory '{d.name}' exceeds limit: {count}")
+
+    def test_aliases_are_regular_files_not_symlinks(self):
+        """Validates that all managed aliases are regular files, not symlinks or text pointers."""
+        self.assertTrue(self.manifest_path.exists())
+        manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        managed = manifest.get("managed_aliases", {})
+        self.assertGreater(len(managed), 13200)
+
+        for rel_path in managed.keys():
+            full_path = self.by_id_dir / rel_path
+            self.assertTrue(full_path.exists(), f"Managed alias missing: {rel_path}")
+            st = os.lstat(full_path)
+            self.assertFalse(stat.S_ISLNK(st.st_mode), f"Alias is a symlink: {rel_path}")
+            self.assertFalse(full_path.is_symlink(), f"Alias is a symlink: {rel_path}")
+            self.assertTrue(stat.S_ISREG(st.st_mode), f"Alias is not a regular file: {rel_path}")
+            with open(full_path, "rb") as f:
+                header = f.read(8)
+                self.assertEqual(header, b"\x89PNG\r\n\x1a\n", f"Alias is not valid PNG: {rel_path}")
 
     def test_real_repo_sample_magic_bytes_and_sha(self):
         # Spot check sample aliases across platforms

@@ -151,6 +151,7 @@ class TestValidationSideEffectFree(unittest.TestCase):
             base_dir / "psx" / "game_id_to_image.json",
             base_dir / "by-id" / "path-layout.json",
             base_dir / "by-id" / ".manifest.json",
+            base_dir / "search-index.json",
         ]
 
         # 1. Record byte contents before validation

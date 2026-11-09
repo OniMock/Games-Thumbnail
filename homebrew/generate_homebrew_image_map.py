@@ -7,6 +7,8 @@ try:
 except ImportError:
     from consolidate_homebrew_catalog import run_consolidation
 
+import sys
+
 # Paths
 BASE_DIR = Path(__file__).resolve().parent
 DATA_JSON = BASE_DIR / "HOMEBREW.data.json"
@@ -39,8 +41,12 @@ def get_png_filenames() -> dict:
     return mapping
 
 def main():
-    # Consolidate entries/ into HOMEBREW.data.json before building image map
-    run_consolidation()
+    # Consolidate entries/ into HOMEBREW.data.json before building image map,
+    # unless explicitly skipped (e.g., in update_all.py or CI where consolidate_homebrew_catalog.py already ran)
+    if "--no-consolidate" not in sys.argv:
+        run_consolidation()
+    else:
+        print("[INFO] Skipping duplicate consolidation (--no-consolidate passed).")
     data = load_data()
     png_map = get_png_filenames()
     result = {}
