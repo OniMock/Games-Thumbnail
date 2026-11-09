@@ -11,9 +11,19 @@ on:
       - 'homebrew/entries/**'
   workflow_dispatch:
 
+# GitHub Actions Concurrency Architecture:
+# - cancel-in-progress: false ensures in-flight runs complete without truncation.
+# - queue: max allows GitHub Actions to hold up to 100 pending workflow runs.
+# - Run ordering in the queue is based on when each run enters the queued state,
+#   which does not guarantee strict FIFO relative to external event timestamps.
+# - If more than 100 runs accumulate, additional runs may be canceled/dropped by GitHub.
+# - Safe convergence is guaranteed by our state-based, non-delta generators:
+#   each execution rebuilds all artifacts from origin/main.
+# - Maintainers can also trigger full reconciliation on-demand via workflow_dispatch.
 concurrency:
   group: catalog-consolidation
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -27,6 +37,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,49 +46,113 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run Catalog & Map Update Sequence
-        run: |
-          echo "=== 1. Auto-Rename Assets ==="
-          python auto_rename_assets.py
-
-          echo "=== 2. Generate PSX Map ==="
-          python psx/generate_psx_image_map.py
-
-          echo "=== 3. Generate PSP Map ==="
-          python psp/generate_psp_image_map.py
-
-          echo "=== 4. Consolidate Homebrew Entries ==="
-          python homebrew/consolidate_homebrew_catalog.py
-
-          echo "=== 5. Generate Homebrew Map ==="
-          python homebrew/generate_homebrew_image_map.py
-
-          echo "=== 6. Generate Full Game Map ==="
-          python generate_full_map.py
-
-          echo "=== 7. Generate By-ID Cover Aliases ==="
-          python generate_by_id_aliases.py
-
-      - name: Commit and Push Consolidated Maps (if changed)
+      - name: Synchronize, Consolidate and Publish Catalogs
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage strictly generated maps, by-id aliases, and any asset renames performed by auto_rename_assets
-          git add full_game_map.json \
-                  psp/game_id_to_image.json \
-                  psx/game_id_to_image.json \
-                  homebrew/HOMEBREW.data.json \
-                  homebrew/game_id_to_image.json \
-                  by-id/
+          MAX_RETRIES=3
+          ATTEMPT=1
+          PUBLISHED=0
 
-          # Stage any file renames performed by auto_rename_assets in Named_Titles folders
-          git add -u psp/Named_Titles/ psx/Named_Titles/ homebrew/Named_Titles/ 2>/dev/null || true
+          while [ $ATTEMPT -le $MAX_RETRIES ]; do
+            echo "=========================================================="
+            echo " Consolidation & Publish Cycle: Attempt $ATTEMPT of $MAX_RETRIES"
+            echo "=========================================================="
 
-          if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
+            # 1. Fetch latest remote state and align strictly with origin/main
+            echo "--- Fetching latest origin/main ---"
+            if ! git fetch origin main; then
+              echo "::error::Fatal: Failed to fetch origin/main from GitHub"
+              exit 1
+            fi
+
+            if ! git reset --hard origin/main; then
+              echo "::error::Fatal: Failed to reset working tree to origin/main"
+              exit 1
+            fi
+
+            # 2. Run full consolidation sequence on clean, up-to-date base
+            echo "=== 1. Auto-Rename Assets ==="
+            python auto_rename_assets.py || { echo "::error::auto_rename_assets.py failed"; exit 1; }
+
+            echo "=== 2. Generate PSX Map ==="
+            python psx/generate_psx_image_map.py || { echo "::error::generate_psx_image_map.py failed"; exit 1; }
+
+            echo "=== 3. Generate PSP Map ==="
+            python psp/generate_psp_image_map.py || { echo "::error::generate_psp_image_map.py failed"; exit 1; }
+
+            echo "=== 4. Consolidate Homebrew Entries ==="
+            python homebrew/consolidate_homebrew_catalog.py || { echo "::error::consolidate_homebrew_catalog.py failed"; exit 1; }
+
+            echo "=== 5. Generate Homebrew Map ==="
+            python homebrew/generate_homebrew_image_map.py --no-consolidate || { echo "::error::generate_homebrew_image_map.py failed"; exit 1; }
+
+            echo "=== 6. Generate Full Game Map ==="
+            python generate_full_map.py || { echo "::error::generate_full_map.py failed"; exit 1; }
+
+            echo "=== 7. Generate By-ID Cover Aliases ==="
+            python generate_by_id_aliases.py || { echo "::error::generate_by_id_aliases.py failed"; exit 1; }
+
+            echo "=== 8. Generate Game Search Index ==="
+            python generate_search_index.py || { echo "::error::generate_search_index.py failed"; exit 1; }
+
+            # 3. Stage generated maps, aliases, index, and renamed assets
+            git add full_game_map.json \
+                    search-index.json \
+                    psp/game_id_to_image.json \
+                    psx/game_id_to_image.json \
+                    homebrew/HOMEBREW.data.json \
+                    homebrew/game_id_to_image.json \
+                    by-id/
+            git add -A -- psp/Named_Titles/ psx/Named_Titles/ homebrew/Named_Titles/
+
+            # 4. Check if any artifact changed
+            if [ -z "$(git status --porcelain --untracked-files=no)" ]; then
+              echo "No catalog, map, alias or index changes detected. Repository is already fully synchronized."
+              PUBLISHED=1
+              break
+            fi
+
+            # 5. Commit consolidated artifacts
             git commit -m "chore(catalog): consolidate catalogs and game maps [skip ci]"
-            git push origin main
-            echo "Consolidated catalogs and maps updated and pushed successfully."
-          else
-            echo "No catalog or map changes detected. Working tree clean."
+
+            # 6. Attempt push and classify failures accurately
+            set +e
+            PUSH_OUTPUT=$(git push origin main 2>&1)
+            PUSH_STATUS=$?
+            set -e
+
+            if [ $PUSH_STATUS -eq 0 ]; then
+              echo "$PUSH_OUTPUT"
+              echo "Consolidated catalogs, maps, aliases and search index successfully published to origin/main."
+              PUBLISHED=1
+              break
+            fi
+
+            echo "$PUSH_OUTPUT"
+
+            # Check if rejection is due to concurrent advancement of origin/main (non-fast-forward / fetch first)
+            if echo "$PUSH_OUTPUT" | grep -qiE "(fetch first|non-fast-forward|remote contains work|tip of your current branch is behind)"; then
+              echo "::warning::Push rejected because origin/main advanced concurrently during consolidation. Re-synchronizing from latest base (attempt $ATTEMPT of $MAX_RETRIES)..."
+              ATTEMPT=$((ATTEMPT + 1))
+              sleep 3
+            elif echo "$PUSH_OUTPUT" | grep -qiE "(Permission to .* denied|error: 403|error: 401|Authentication failed|could not read Username)"; then
+              echo "::error::Fatal: Authentication or permission error pushing to origin/main. Check repository permissions."
+              exit 1
+            elif echo "$PUSH_OUTPUT" | grep -qiE "(GH006|protected branch|pre-receive hook declined)"; then
+              echo "::error::Fatal: Push rejected by GitHub branch protection rules or pre-receive hooks."
+              exit 1
+            elif echo "$PUSH_OUTPUT" | grep -qiE "(Could not resolve host|Failed to connect|Connection timed out|Network is unreachable|The remote end hung up)"; then
+              echo "::error::Fatal: Network infrastructure error encountered while pushing to origin/main."
+              exit 1
+            else
+              echo "::error::Fatal: Git push to origin/main failed with an unrecoverable error."
+              exit 1
+            fi
+          done
+
+          if [ $PUBLISHED -ne 1 ]; then
+            echo "::error::Fatal: Failed to publish consolidated catalogs after $MAX_RETRIES attempts due to persistent concurrent pushes."
+            exit 1
           fi

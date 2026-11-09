@@ -206,6 +206,70 @@ print(resolve_cover("ULUS-10041"))
 
 ---
 
+### 3. Compact Game Search Index (`search-index.json`)
+
+For applications requiring client-side game search, title autocomplete, and platform resolution without downloading the full individual catalogs, this repository publishes a unified, deterministic search index:
+
+- **CDN URL (Global Edge Cached):** `https://cdn.jsdelivr.net/gh/OniMock/Games-Thumbnail@main/search-index.json`
+- **GitHub Raw:** `https://raw.githubusercontent.com/OniMock/Games-Thumbnail/main/search-index.json`
+- **Total Games:** 19,443 (PSP: 7,680 | PSX: 11,753 | Homebrew: 10)
+- **Games with Covers:** 13,239 | **Without Covers:** 6,204
+- **Size:** ~362 KB (gzipped) / ~2.85 MB (uncompressed JSON)
+
+#### Example Schema
+
+```json
+{
+  "version": 1,
+  "total_games": 19443,
+  "games": [
+    {
+      "id": "SLUS00068",
+      "title": "Resident Evil 2",
+      "aliases": [
+        "Resident Evil 2 (USA)"
+      ],
+      "platform": "psx",
+      "category": "PS1",
+      "hasCover": true
+    }
+  ]
+}
+```
+
+#### Client Search Implementation (TypeScript)
+
+```typescript
+interface GameSearchRecord {
+  id: string;
+  title: string;
+  aliases: string[];
+  platform: 'psp' | 'psx' | 'homebrew';
+  category: 'PSP' | 'PS1' | 'Homebrew';
+  hasCover: boolean;
+}
+
+function searchGames(query: string, index: GameSearchRecord[]): GameSearchRecord[] {
+  const qClean = query.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+  if (!qClean) return [];
+
+  return index.filter((g) => {
+    const idClean = g.id.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+    const titleClean = g.title.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+
+    // Match by ID, main title, or alternative titles (aliases)
+    return (
+      idClean === qClean ||
+      (qClean.length >= 4 && idClean.includes(qClean)) ||
+      titleClean.includes(qClean) ||
+      g.aliases.some((a) => a.replace(/[^A-Za-z0-9]/g, '').toLowerCase().includes(qClean))
+    );
+  });
+}
+```
+
+---
+
 ## Cover Image Standards & Specifications
 
 To maintain high visual quality across applications, all submitted covers must follow these guidelines:

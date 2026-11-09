@@ -343,6 +343,19 @@ def dry_run_catalog_consolidation() -> list[str]:
         except Exception as e:
             errors.append(f"Exception during By-ID alias validation dry-run: {e}")
 
+        try:
+            from generate_search_index import generate_search_index
+            temp_search_index = tmp_path / "search-index.json"
+            success, msg = generate_search_index(
+                base_dir=BASE_DIR,
+                output_path=temp_search_index,
+                check_only=False
+            )
+            if not success:
+                errors.append(f"Search index generation dry-run failed: {msg}")
+        except Exception as e:
+            errors.append(f"Exception during Search Index generation dry-run: {e}")
+
     return errors
 
 def main():

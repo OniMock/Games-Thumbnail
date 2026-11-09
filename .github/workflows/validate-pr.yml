@@ -9,6 +9,15 @@ on:
       - 'homebrew/Named_Titles/**'
       - 'psp/Named_Titles/**'
       - 'psx/Named_Titles/**'
+      - 'generate_search_index.py'
+      - 'test_generate_search_index.py'
+      - 'search-index.json'
+      - 'generate_by_id_aliases.py'
+      - 'test_generate_by_id.py'
+      - '.github/workflows/**'
+      - 'validate_pr.py'
+      - 'test_validate_pr.py'
+      - 'update_all.py'
 
 permissions:
   contents: read
@@ -43,6 +52,9 @@ jobs:
           echo "=== 4. By-ID Aliases Unit Tests ==="
           python test_generate_by_id.py
 
-          echo "=== 5. Pull Request Validation Suite (Dry Run) ==="
+          echo "=== 5. Search Index Unit Tests ==="
+          python test_generate_search_index.py
+
+          echo "=== 6. Pull Request Validation Suite (Dry Run) ==="
           python validate_pr.py
           echo "PR validation successful: all contributions conform to platform specifications."
