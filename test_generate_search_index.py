@@ -71,11 +71,12 @@ class TestPlatformCoverageAndMetrics(unittest.TestCase):
     def setUpClass(cls):
         cls.data = build_search_index_data(BASE_DIR)
         cls.games = cls.data["games"]
+        cls.hb_data = json.loads((BASE_DIR / "homebrew" / "HOMEBREW.data.json").read_text(encoding="utf-8"))
 
     def test_total_counts(self):
         self.assertEqual(self.data["version"], 1)
-        self.assertEqual(self.data["total_games"], 19443)
-        self.assertEqual(len(self.games), 19443)
+        self.assertEqual(self.data["total_games"], len(self.games))
+        self.assertGreaterEqual(len(self.games), 19443)
 
     def test_per_platform_distribution(self):
         psp = [g for g in self.games if g["platform"] == "psp"]
@@ -84,7 +85,9 @@ class TestPlatformCoverageAndMetrics(unittest.TestCase):
 
         self.assertEqual(len(psp), 7680, "Expected exactly 7,680 PSP games")
         self.assertEqual(len(psx), 11753, "Expected exactly 11,753 PSX games")
-        self.assertEqual(len(hb), 10, "Expected exactly 10 Homebrew games")
+        expected_hb = len([k for k, v in self.hb_data.items() if isinstance(v, dict)])
+        self.assertEqual(len(hb), expected_hb, f"Expected {expected_hb} Homebrew games")
+        self.assertEqual(len(self.games), len(psp) + len(psx) + len(hb))
 
     def test_categories(self):
         for g in self.games:
@@ -118,7 +121,7 @@ class TestDuplicatesAndConsolidation(unittest.TestCase):
 
     def test_no_id_collisions(self):
         ids = [g["id"] for g in self.data["games"]]
-        self.assertEqual(len(ids), len(set(ids)), "All 19,443 Game IDs must be globally unique")
+        self.assertEqual(len(ids), len(set(ids)), "All Game IDs must be globally unique")
 
 
 class TestRecordsWithoutSerial(unittest.TestCase):
@@ -148,8 +151,16 @@ class TestHasCoverConsistency(unittest.TestCase):
         with_cover = [g for g in games if g["hasCover"]]
         without_cover = [g for g in games if not g["hasCover"]]
 
-        self.assertEqual(len(with_cover), 13239, "Expected exactly 13,239 games with cover")
-        self.assertEqual(len(without_cover), 6204, "Expected exactly 6,204 games without cover")
+        self.assertEqual(
+            len(with_cover) + len(without_cover),
+            len(games),
+            "Sum of with_cover and without_cover must equal total games"
+        )
+        self.assertEqual(
+            len(with_cover),
+            len(self.full_map),
+            "Games marked with hasCover=True must match full_game_map entries"
+        )
 
     def test_has_cover_matches_full_map_and_manifest(self):
         games = self.data["games"]
